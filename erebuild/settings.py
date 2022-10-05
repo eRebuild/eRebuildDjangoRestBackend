@@ -26,8 +26,10 @@ SECRET_KEY = 'django-insecure-3=y!2(hqb$^qrhp2js=_r7n&8_em#$rkfr)0w$x35y(ekywa17
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
+USE_X_FORWARDED_HOST = True
+FORCE_SCRIPT_NAME = "/django/"
+CSRF_TRUSTED_ORIGINS = ['https://mileresearch.coe.fsu.edu']
 
 # Application definition
 
@@ -62,7 +64,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'erebuild.urls'
 
-STATIC_URL = 'static/'
+STATIC_URL = 'django/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
     
 TEMPLATES = [

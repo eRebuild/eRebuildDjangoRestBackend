@@ -1,7 +1,3 @@
-from operator import mod, truediv
-from pyexpat import model
-from statistics import mode
-from tkinter import CASCADE, Scale
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
