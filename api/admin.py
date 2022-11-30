@@ -90,6 +90,10 @@ class PlacingPlannerAdmin(ImportExportModelAdmin):
     resource_class = PlacingPlannerResource
 admin.site.register(PlacingPlanner, PlacingPlannerAdmin)
 
+class ObjectiveRequirementsAdmin(ImportExportModelAdmin):
+    resource_class = ObjectiveRequirementsResource
+admin.site.register(ObjectiveRequirements, ObjectiveRequirementsAdmin)
+
 # Register your models here.
 # admin.site.register(Badge)
 # admin.site.register(Area)

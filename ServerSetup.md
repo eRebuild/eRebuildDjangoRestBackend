@@ -24,3 +24,10 @@ preserveHostHeader needs to be set to True
     * Address = 192.168.0.2
     * Gateway = 192.168.0.1
     * DNS     = 8.8.8.8
+
+## Code Update
+1. Ensure FORWARDED_TO_VM is set in settings.py.
+2. Update Unity artifacts in static/unity/Build
+3. Push code changes to GitHub.
+4. (For now) Pull latest on server. 
+    * Note: Ideally, this is done as a merge request. After the request is accepted, a trigger will happen on the server.

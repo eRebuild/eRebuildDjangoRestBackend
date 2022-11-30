@@ -1,28 +1,58 @@
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from rest_framework import permissions
+from rest_framework.views import APIView
 from .serializers import *
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from rest_framework.renderers import TemplateHTMLRenderer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
 
-# create a function
-
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=raw_password)
+            login(request, user)
+            return redirect('')
+    elif request.user.is_authenticated:
+        return redirect('')
+    else:
+        form = UserCreationForm()
+    return render(request, 'register.html', {'form': form})
 
 def geeks_view(request):
-    # create a dictionary to pass
-    # data to the template
-    context = {
-        "token": Token.objects.get_or_create(user=request.user.id)[0],
-        "data": "Gfg is the best",
-        "list": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    }
-    # return response with template and context
-    return render(request, "geeks.html", context)
+    if request.user.is_authenticated:
+        # create a dictionary to pass
+        # data to the template
+        context = {
+            "token": Token.objects.get_or_create(user=request.user.id)[0],
+            "data": "Gfg is the best",
+            "list": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        }
+        # return response with template and context
+        return render(request, "geeks.html", context)
+    else:
+        return register(request)
 
+class LoginView(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'register.html'
+    queryset = User.objects.all()
+    permission_classes = [permissions.AllowAny]
+    serializer_class = LoginSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -97,10 +127,16 @@ class ObjectiveWeightViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
+class LargeResultsSetPagination(PageNumberPagination):
+    page_size = 1000
+    page_size_query_param = 'page_size'
+    max_page_size = 10000
+
 class LevelViewSet(viewsets.ModelViewSet):
     queryset = Level.objects.all()
     serializer_class = LevelSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = LargeResultsSetPagination
 
 
 class UnitViewSet(viewsets.ModelViewSet):
@@ -148,4 +184,9 @@ class FoldPlannerViewSet(viewsets.ModelViewSet):
 class PlacingPlannerViewSet(viewsets.ModelViewSet):
     queryset = PlacingPlanner.objects.all()
     serializer_class = PlacingPlannerSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class ObjectiveRequirementsViewSet(viewsets.ModelViewSet):
+    queryset = ObjectiveRequirements.objects.all()
+    serializer_class = ObjectiveRequirementsSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]

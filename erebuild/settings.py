@@ -12,10 +12,10 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 from pathlib import Path
+FORWARDED_TO_VM = True
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -28,7 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 USE_X_FORWARDED_HOST = True
-FORCE_SCRIPT_NAME = "/django/"
+
 CSRF_TRUSTED_ORIGINS = ['https://mileresearch.coe.fsu.edu']
 
 # Application definition
@@ -63,10 +63,14 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'erebuild.urls'
-
-STATIC_URL = 'django/static/'
+if FORWARDED_TO_VM:
+    FORCE_SCRIPT_NAME = "/django/"
+    STATIC_URL = 'django/static/'
+else:
+    STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-    
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static_files')]
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

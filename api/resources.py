@@ -117,3 +117,8 @@ class PlacingPlannerResource(ModelResource):
     class Meta:
         model = PlacingPlanner
 
+
+
+class ObjectiveRequirementsResource(ModelResource):
+    class Meta:
+        model = ObjectiveRequirements

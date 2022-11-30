@@ -1,3 +1,4 @@
+from pickle import TRUE
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -81,22 +82,6 @@ class ObjectiveWeight(models.Model):
     def __str__(self):
         return str(self.objective_pair) + ' ' + str(self.weight)
 
-class Level(models.Model):
-    name = models.CharField(max_length=30)
-    description = models.CharField(max_length=240)
-    starting_credits = models.IntegerField(default=1000)
-    difficulty_math = models.IntegerField(default=0)
-    difficulty_hci = models.IntegerField(default=0)
-    tools = models.ManyToManyField(Tool)
-    area = models.ForeignKey(Area, on_delete=models.CASCADE)
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
-    badges = models.ManyToManyField(BadgeRequirement)
-    objective_weights = models.ManyToManyField(ObjectiveWeight)
-    shop_items = models.ManyToManyField(ItemQuantity, blank=True, related_name="shop_items")
-    starting_items = models.ManyToManyField(ItemQuantity, blank=True, related_name="starting_items")
-    def __str__(self):
-        return self.name
-
 class Unit(models.Model):
     name = models.CharField(max_length=30)
     dimensions = models.ManyToManyField(Dimension, blank=False, related_name="unit_dimensions")
@@ -111,12 +96,6 @@ class Group(models.Model):
     dimensions = models.ManyToManyField(Dimension, blank=False, related_name="group_dimensions")
     def __str__(self):
         return str(self.name)
-
-class UnitsPlanner(models.Model):
-    level = models.ForeignKey(Level, on_delete=models.CASCADE)
-    units = models.ManyToManyField(Unit)
-    def __str__(self):
-        return str(self.level.name)
 
 class Shape(models.Model):
     name = models.CharField(max_length=30, blank=True)
@@ -137,39 +116,14 @@ class Module(models.Model):
     def __str__(self):
         return str(self.name)
 
-class ItemsPlanner(models.Model):
-    level = models.ForeignKey(Level, on_delete=models.CASCADE)
-    module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    formula = models.CharField(max_length=300, blank=False)
-    targets = models.ManyToManyField(Target, blank=True)
-    expected_quantity = models.JSONField()
-    def __str__(self):
-        return str(self.level.name) + ' ' + str(self.module.name)
-
-class FoldPlanner(models.Model):
-    level = models.ForeignKey(Level, on_delete=models.CASCADE)
-    image = models.CharField(max_length=300, blank=True)
-    expected_input = models.JSONField()
-    def __str__(self):
-        return str(self.level.name)
-
-class PlacingPlanner(models.Model):
-    level = models.ForeignKey(Level, on_delete=models.CASCADE)
-    module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    selection_options = models.JSONField()
-    expected_input = models.JSONField()
-    def __str__(self):
-        return str(self.level.name) + ' ' + str(self.module.name)
-
 class ObjectiveRequirements(models.Model):
     type = models.ForeignKey(GameObjective, on_delete=models.CASCADE)
     description = models.CharField(blank=True, max_length=240)
-    target = models.FloatField(blank=True)
-    tolerance = models.FloatField(blank=True)
-    json = models.JSONField()
+    target = models.FloatField(null=True, blank=True)
+    tolerance = models.FloatField(null=True, blank=True)
+    json = models.JSONField(null=True, blank=True, default=dict)
     def __str__(self):
-        return
+        return str(self.type)
 
 class ObjectiveResponse(models.Model):
     requirements = models.ForeignKey(ObjectiveRequirements, on_delete=models.CASCADE)
@@ -223,3 +177,50 @@ class InWorldItem(models.Model):
     keep_close_group = models.IntegerField(blank=True)
     paint_needed = models.IntegerField(blank=True)
 
+class Level(models.Model):
+    name = models.CharField(max_length=30)
+    description = models.CharField(max_length=240)
+    starting_credits = models.IntegerField(default=1000)
+    difficulty_math = models.IntegerField(default=0)
+    difficulty_hci = models.IntegerField(default=0)
+    tools = models.ManyToManyField(Tool, blank=TRUE)
+    area = models.ForeignKey(Area, on_delete=models.CASCADE)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    badges = models.ManyToManyField(BadgeRequirement)
+    objective_weights = models.ManyToManyField(ObjectiveWeight)
+    objective_requirements = models.ManyToManyField(ObjectiveRequirements, blank=True)
+    shop_items = models.ManyToManyField(ItemQuantity, blank=True, related_name="shop_items")
+    starting_items = models.ManyToManyField(ItemQuantity, blank=True, related_name="starting_items")
+    def __str__(self):
+        return self.name
+
+class UnitsPlanner(models.Model):
+    level = models.ForeignKey(Level, on_delete=models.CASCADE)
+    units = models.ManyToManyField(Unit)
+    def __str__(self):
+        return str(self.level.name)
+
+class ItemsPlanner(models.Model):
+    level = models.ForeignKey(Level, on_delete=models.CASCADE)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    formula = models.CharField(max_length=300, blank=False)
+    targets = models.ManyToManyField(Target, blank=True)
+    expected_quantity = models.JSONField()
+    def __str__(self):
+        return str(self.level.name) + ' ' + str(self.module.name)
+
+class FoldPlanner(models.Model):
+    level = models.ForeignKey(Level, on_delete=models.CASCADE)
+    image = models.CharField(max_length=300, blank=True)
+    expected_input = models.JSONField()
+    def __str__(self):
+        return str(self.level.name)
+
+class PlacingPlanner(models.Model):
+    level = models.ForeignKey(Level, on_delete=models.CASCADE)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    selection_options = models.JSONField()
+    expected_input = models.JSONField()
+    def __str__(self):
+        return str(self.level.name) + ' ' + str(self.module.name)

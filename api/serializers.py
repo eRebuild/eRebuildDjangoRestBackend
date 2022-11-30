@@ -1,3 +1,4 @@
+from dataclasses import field
 from operator import itemgetter
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
@@ -7,11 +8,36 @@ from .models import *
 class HyperlinkedIdModelSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.ReadOnlyField()
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        max_length=100,
+        style={'placeholder': 'Email', 'autofocus': True}
+    )
+    password = serializers.CharField(
+        max_length=100,
+        style={'input_type': 'password', 'placeholder': 'Password'}
+    )
+    #remember_me = serializers.BooleanField()
+
+class UserSerializer(serializers.ModelSerializer):
+
+    password = serializers.CharField(write_only=True)
+
+    def create(self, validated_data):
+
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+        )
+
+        return user
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'groups', 'url']
-
+        # Tuple of serialized model fields (see link [2])
+        fields = ( "id", "username", "password", )
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -88,6 +114,7 @@ class ObjectiveWeightSerializer(HyperlinkedIdModelSerializer):
 class LevelSerializer(HyperlinkedIdModelSerializer):
     class Meta:
         model = Level
+        depth = 5
         fields = '__all__'
 
 class UnitSerializer(HyperlinkedIdModelSerializer):
@@ -134,4 +161,9 @@ class FoldPlannerSerializer(HyperlinkedIdModelSerializer):
 class PlacingPlannerSerializer(HyperlinkedIdModelSerializer):
     class Meta:
         model = PlacingPlanner
+        fields = '__all__'
+
+class ObjectiveRequirementsSerializer(HyperlinkedIdModelSerializer):
+    class Meta:
+        model = ObjectiveRequirements
         fields = '__all__'

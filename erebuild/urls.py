@@ -34,6 +34,8 @@ router.register(r'Module', views.ModuleViewSet)
 router.register(r'ItemsPlanner', views.ItemsPlannerViewSet)
 router.register(r'FoldPlanner', views.FoldPlannerViewSet)
 router.register(r'PlacingPlanner', views.PlacingPlannerViewSet)
+router.register(r'ObjectiveRequirements', views.ObjectiveRequirementsViewSet)
+
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -45,6 +47,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('docs/', include_docs_urls(title='My API service'), name='api-docs'),
     path('', views.geeks_view),
+    path('register/', views.register),
+    #path('Login/', views.LoginView),
 ]
 
 urlpatterns  +=  static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
