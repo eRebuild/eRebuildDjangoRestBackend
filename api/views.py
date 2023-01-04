@@ -4,6 +4,10 @@ from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.views import APIView
+
+from bayesianNetwork.level_recommender import RecommendLevels, UpdateLevelRecommendations
+from bayesianNetwork.models import UserGameData
+from bayesianNetwork.stealth_assessment import PredictGameObjectiveNetwork, PredictMainNetwork
 from .serializers import *
 from django.shortcuts import render, redirect
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -137,6 +141,31 @@ class LevelViewSet(viewsets.ModelViewSet):
     serializer_class = LevelSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     pagination_class = LargeResultsSetPagination
+
+class BadgeResultViewSet(viewsets.ModelViewSet):
+    queryset = BadgeResult.objects.all()
+    serializer_class = BadgeResultSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class ObjectiveResponseViewSet(viewsets.ModelViewSet):
+    queryset = ObjectiveResponse.objects.all()
+    serializer_class = ObjectiveResponseSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+class LevelResultViewSet(viewsets.ModelViewSet):
+    queryset = LevelResult.objects.all()
+    serializer_class = LevelResultSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    def post(self, request, *args, **kwargs):
+        level_result: LevelResult = self.create(request, *args, **kwargs)
+        print("DASDA")
+        objective_responses = level_result.objective_responses.all()
+        for objective_response in objective_responses:
+            PredictGameObjectiveNetwork(objective_response)
+        PredictMainNetwork(level_result)
+        UpdateLevelRecommendations(level_result)
+        return Response(data=UserGameData.objects.get(User=level_result.user))
 
 
 class UnitViewSet(viewsets.ModelViewSet):

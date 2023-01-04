@@ -110,6 +110,23 @@ class ObjectiveWeightSerializer(HyperlinkedIdModelSerializer):
         model = ObjectiveWeight
         fields = '__all__'
 
+class LevelResultSerializer(HyperlinkedIdModelSerializer):
+    class Meta:
+        model = LevelResult
+        fields = '__all__'
+BadgeResult
+
+class BadgeResultSerializer(HyperlinkedIdModelSerializer):
+    class Meta:
+        model = BadgeResult
+        fields = '__all__'
+
+class ObjectiveResponseSerializer(HyperlinkedIdModelSerializer):
+    class Meta:
+        model = ObjectiveResponse
+        fields = '__all__'
+
+ObjectiveResponse
 
 class LevelSerializer(HyperlinkedIdModelSerializer):
     class Meta:

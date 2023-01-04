@@ -94,6 +94,19 @@ class ObjectiveRequirementsAdmin(ImportExportModelAdmin):
     resource_class = ObjectiveRequirementsResource
 admin.site.register(ObjectiveRequirements, ObjectiveRequirementsAdmin)
 
+class LevelResultAdmin(ImportExportModelAdmin):
+    resource_class = LevelResultResource
+admin.site.register(LevelResult, LevelResultAdmin)
+
+class ObjectiveResponseAdmin(ImportExportModelAdmin):
+    resource_class = ObjectiveResponseResource
+admin.site.register(ObjectiveResponse, ObjectiveResponseAdmin)
+
+class BadgeResultAdmin(ImportExportModelAdmin):
+    resource_class = BadgeResultResource
+admin.site.register(BadgeResult, BadgeResultAdmin)
+
+
 # Register your models here.
 # admin.site.register(Badge)
 # admin.site.register(Area)

@@ -33,12 +33,14 @@ class Area(models.Model):
 class GameObjective(models.Model):
     name = models.CharField(max_length=30)
     description = models.CharField(max_length=240)
+    node_name = models.CharField(blank=True, max_length=64)
+    negative_correlation = models.BooleanField()
     def __str__(self):
         return self.name
 
 class Dimension(models.Model):
     name = models.CharField(max_length=30)
-    value = models.DecimalField(max_digits=10, decimal_places=4, default=1)
+    value = models.FloatField(default=1)
     unit = models.CharField(max_length=30)
     def __str__(self):
         return str(self.name) + ': ' + str(self.value) + str(self.unit)
@@ -59,6 +61,7 @@ class ItemQuantity(models.Model):
 
 class LearningObjective(models.Model):
     name = models.CharField(max_length=30)
+    node_name = models.CharField(max_length=30)
     description = models.CharField(max_length=360)
     example = models.CharField(max_length=360, null=True)
     def __str__(self):
@@ -66,9 +69,13 @@ class LearningObjective(models.Model):
     
 class BadgeRequirement(models.Model):
     badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
-    threshold = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    threshold = models.FloatField(default=0)
     def __str__(self):
         return str(self.badge) + ' ' + str(self.threshold)
+
+class BadgeResult(models.Model):
+    badge_requirement = models.ForeignKey(BadgeRequirement, on_delete=models.CASCADE)
+    awarded = models.BooleanField()
 
 class ObjectivePair(models.Model):
     game_objective = models.ForeignKey(GameObjective, on_delete=models.CASCADE)
@@ -78,7 +85,7 @@ class ObjectivePair(models.Model):
 
 class ObjectiveWeight(models.Model):
     objective_pair = models.ForeignKey(ObjectivePair, on_delete=models.CASCADE)
-    weight = models.DecimalField(max_digits=10, decimal_places=4, default=1)
+    weight = models.FloatField(default=1)
     def __str__(self):
         return str(self.objective_pair) + ' ' + str(self.weight)
 
@@ -122,6 +129,10 @@ class ObjectiveRequirements(models.Model):
     target = models.FloatField(null=True, blank=True)
     tolerance = models.FloatField(null=True, blank=True)
     json = models.JSONField(null=True, blank=True, default=dict)
+    result_low_cutoff = models.FloatField(null=True, blank=True)
+    result_high_cutoff = models.FloatField(null=True, blank=True)
+    time_low_cutoff = models.FloatField(null=True, blank=True)
+    time_high_cutoff = models.FloatField(null=True, blank=True)
     def __str__(self):
         return str(self.type)
 
@@ -129,12 +140,13 @@ class ObjectiveResponse(models.Model):
     requirements = models.ForeignKey(ObjectiveRequirements, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
-    totalTime = models.FloatField()
+    time = models.FloatField()
     complete = models.BooleanField()
-    actual = models.FloatField(blank=True)
-    json = models.JSONField();
+    actual = models.FloatField(null=True, blank=True)
+    json = models.JSONField(null=True, blank=True, default=dict);
     def __str__(self):
-        return
+        return str(self.requirements)
+
 
 class Vector2():
     def __init__(self, x,y):
@@ -193,6 +205,15 @@ class Level(models.Model):
     starting_items = models.ManyToManyField(ItemQuantity, blank=True, related_name="starting_items")
     def __str__(self):
         return self.name
+
+        
+class LevelResult(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    level = models.ForeignKey(Level, on_delete=models.CASCADE)
+    completed = models.BooleanField()
+    badge_results = models.ManyToManyField(BadgeResult)
+    objective_responses = models.ManyToManyField(ObjectiveResponse)
+
 
 class UnitsPlanner(models.Model):
     level = models.ForeignKey(Level, on_delete=models.CASCADE)

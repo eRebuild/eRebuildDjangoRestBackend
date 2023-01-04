@@ -122,3 +122,19 @@ class PlacingPlannerResource(ModelResource):
 class ObjectiveRequirementsResource(ModelResource):
     class Meta:
         model = ObjectiveRequirements
+
+        
+class ObjectiveResponseResource(ModelResource):
+    class Meta:
+        model = ObjectiveResponse
+
+
+class LevelResultResource(ModelResource):
+    class Meta:
+        model = LevelResult
+
+
+
+class BadgeResultResource(ModelResource):
+    class Meta:
+        model = BadgeResult
