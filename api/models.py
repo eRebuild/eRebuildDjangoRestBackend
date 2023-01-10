@@ -32,7 +32,7 @@ class Area(models.Model):
 class GameObjective(models.Model):
     name = models.CharField(max_length=30)
     description = models.CharField(max_length=240)
-    node_name = models.CharField(blank=True, max_length=64, default="lo_"+name)
+    node_name = models.CharField(blank=True, max_length=64, default="lo_"+str(name))
     negative_correlation = models.BooleanField(default=False)
     def __str__(self):
         return self.name
