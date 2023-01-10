@@ -65,7 +65,7 @@ class ItemQuantity(models.Model):
 
 class LearningObjective(models.Model):
     name = models.CharField(max_length=30)
-    node_name = models.CharField(max_length=30, default="lo_"+name)
+    node_name = models.CharField(max_length=30, default="lo_"+str(name))
     description = models.CharField(max_length=360)
     example = models.CharField(max_length=360, null=True)
     def __str__(self):
