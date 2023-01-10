@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 import os
 from pathlib import Path
+from pickle import FALSE, TRUE
 FORWARDED_TO_VM = False
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,7 +28,6 @@ SECRET_KEY = 'django-insecure-3=y!2(hqb$^qrhp2js=_r7n&8_em#$rkfr)0w$x35y(ekywa17
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-USE_X_FORWARDED_HOST = True
 
 CSRF_TRUSTED_ORIGINS = ['https://mileresearch.coe.fsu.edu']
 
@@ -40,18 +40,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
     'rest_framework',
     'api',
     'bayesianNetwork',
     'rest_framework.authtoken',
     'import_export',
 ]
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',  # <-- And here
-    ],
-}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -65,10 +60,13 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'erebuild.urls'
 if FORWARDED_TO_VM:
+    USE_X_FORWARDED_HOST = TRUE
     FORCE_SCRIPT_NAME = "/django/"
     STATIC_URL = 'django/static/'
 else:
     STATIC_URL = 'static/'
+    USE_X_FORWARDED_HOST = FALSE
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static_files')]
 
@@ -141,7 +139,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',  # <-- And here
+    ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 IMPORT_EXPORT_USE_TRANSACTIONS = True

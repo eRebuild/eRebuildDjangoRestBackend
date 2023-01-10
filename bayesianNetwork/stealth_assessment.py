@@ -1,6 +1,6 @@
 from pomegranate import BayesianNetwork
 
-from api.models import LevelResult, ObjectiveResponse
+from api.models import LevelResult, ObjectiveRequirements, ObjectiveResponse
 from .models import InitialGameObjectiveBayesianNetwork, InitialMainBayesianNetwork, UserGameObjectiveBayesianNetwork, UserMainBayesianNetwork
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -9,11 +9,11 @@ def ConvertResponseToCategotical(objectiveResponse: ObjectiveResponse):
     cat['Complete'] = 'T' if objectiveResponse.complete else 'F'
     cat['Time'] = 'H' if objectiveResponse.time <= objectiveResponse.requirements.time_high_cutoff else \
         'M' if objectiveResponse.time <= objectiveResponse.requirements.time_low_cutoff else 'L'
-    if objectiveResponse.requirements.type.negative_correlation:
-        cat[objectiveResponse.requirements.type.node_name] = 'H' if objectiveResponse.actual <= objectiveResponse.requirements.result_high_cutoff else \
+    if objectiveResponse.requirements.pair.game_objective.negative_correlation:
+        cat[objectiveResponse.requirements.pair.game_objective.node_name] = 'H' if objectiveResponse.actual <= objectiveResponse.requirements.result_high_cutoff else \
             'M' if objectiveResponse.actual <= objectiveResponse.requirements.result_low_cutoff else 'L'
     else:
-        cat[objectiveResponse.requirements.type.node_name] = 'H' if objectiveResponse.actual >= objectiveResponse.requirements.result_high_cutoff else \
+        cat[objectiveResponse.requirements.pair.game_objective.node_name] = 'H' if objectiveResponse.actual >= objectiveResponse.requirements.result_high_cutoff else \
             'M' if objectiveResponse.actual >= objectiveResponse.requirements.result_low_cutoff else 'L'
     return cat
 
@@ -28,12 +28,13 @@ def GetNodeScore(node_name, user):
 
 
 def PredictGameObjectiveNetwork(objectiveResponse: ObjectiveResponse):
-    type = objectiveResponse.requirements.type
+    type = objectiveResponse.requirements.pair.game_objective
     try:
-        entry = UserGameObjectiveBayesianNetwork.objects.get(user=objectiveResponse.user, gameObjective=type)
+        print(type)
+        entry = UserGameObjectiveBayesianNetwork.objects.get(user=objectiveResponse.user, game_objective=type)
     except:
         network = InitialGameObjectiveBayesianNetwork.objects.filter(game_objective=type).latest('date_modified').graph
-        entry = UserGameObjectiveBayesianNetwork.objects.create(user=objectiveResponse.user, network=network)
+        entry = UserGameObjectiveBayesianNetwork.objects.create(user=objectiveResponse.user, network=network, game_objective=type)
     cat = ConvertResponseToCategotical(objectiveResponse)
     network = BayesianNetwork.from_dict(entry.network)
     entry.score = network.predict_proba(cat)[-1]
@@ -52,25 +53,22 @@ def PredictMainNetwork(level_result: LevelResult):
         entry = UserMainBayesianNetwork.objects.create(user=level_result.user, network=graph)
         entry.save()
     network = BayesianNetwork.from_dict(entry.network)
-    objective_weights = level_result.level.objective_weights.all()
-    unique_weights = set(
-        [float(objective_weight.weight) for objective_weight in objective_weights])
+    objective_requirements =ObjectiveRequirements.objects.filter(level=level_result.level)
     data = {}
     math_belief = network.predict_proba(data)[-1].parameters[-1]
     math_score = max(math_belief, key=math_belief.get)
-    for weight in unique_weights:
-        objective_pairs = [objective_weight.objective_pair for objective_weight in objective_weights if objective_weight.weight == weight]
-        for objective_pair in objective_pairs:
-            key = "@".join([objective_pair.game_objective.name, objective_pair.learning_objective.name])
-            try:
-                game_objective_network = UserGameObjectiveBayesianNetwork.objects.get(
-                    user=level_result.user, gameObjective=objective_pair.game_objective)
-                data[weight] = {key, game_objective_network.score}
-                data[weight] = [data[weight][k] if k.name in data[weight]
-                    else None for k in network.states]
-                data[weight][-1] = math_score
-            except ObjectDoesNotExist:
-                pass
+    for objective_requirement in objective_requirements:
+        key = "@".join([objective_requirement.pair.game_objective.name, objective_requirement.pair.learning_objective.name])
+        try:
+            game_objective_network = UserGameObjectiveBayesianNetwork.objects.get(
+                user=level_result.user, game_objective=objective_requirement.pair.game_objective)
+            data_weight_dict = data.get(objective_requirement.weight, {})
+            data_weight_dict[key] = game_objective_network.score
+        except ObjectDoesNotExist:
+            pass
+    for key in data.keys():
+        data[key] = [data[key][k] if k.name in data[key] else None for k in network.states]
+        data[key][-1] = math_score
     if len(data) > 0:
         network.fit(list(data.values()), list(data.keys()), inertia=0.925)
         entry.network = network.to_dict()

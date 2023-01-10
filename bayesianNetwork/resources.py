@@ -12,11 +12,6 @@ class UserMainBayesianNetworkResource(ModelResource):
         model = UserMainBayesianNetwork
 
 
-class UserGameDataResource(ModelResource):
-    class Meta:
-        model = UserGameData
-
-
 class LearningObjectiveTrajectoryResource(ModelResource):
     class Meta:
         model = LearningObjectiveTrajectory

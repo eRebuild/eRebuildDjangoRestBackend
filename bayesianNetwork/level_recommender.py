@@ -1,6 +1,6 @@
 from operator import index
-from api.models import LearningObjective, LevelResult, User
-from bayesianNetwork.models import LearningObjectiveTrajectory, UserGameData
+from api.models import LearningObjective, LevelResult, User, UserGameData
+from bayesianNetwork.models import LearningObjectiveTrajectory
 from bayesianNetwork.stealth_assessment import GetNodeScore
 
 
@@ -32,7 +32,7 @@ def UpdateLevelRecommendations(level_result: LevelResult):
         score: str = GetNodeScore(learning_objective.node_name, user.user)
         levels, num_total = GetUnlockedLevelsForLearningObjective(learning_objective, user)
         num_unlocked = len(levels)
-        if level_result.level in recommend_levels:
+        if level_result.level in recommend_levels.all():
             if level_result.completed:
                 if num_unlocked == 0 or (score == 'M' or score == 'H' and num_total - num_unlocked >= 2):
                     user.closed_learning_objectives.add(learning_objective)

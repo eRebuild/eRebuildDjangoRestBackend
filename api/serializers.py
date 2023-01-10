@@ -1,7 +1,8 @@
-from dataclasses import field
-from operator import itemgetter
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
+
+from bayesianNetwork.level_recommender import UpdateLevelRecommendations
+from bayesianNetwork.stealth_assessment import PredictGameObjectiveNetwork, PredictMainNetwork
 from .models import *
 
 
@@ -37,7 +38,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         # Tuple of serialized model fields (see link [2])
-        fields = ( "id", "username", "password", )
+        fields = ( "id", "username", "password")
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -95,44 +96,91 @@ class LearningObjectiveSerializer(HyperlinkedIdModelSerializer):
 
 class BadgeRequirementSerializer(HyperlinkedIdModelSerializer):
     class Meta:
+        depth = 2
         model = BadgeRequirement
-        fields = '__all__'
-
+        fields = [
+            'url',
+            'badge',
+            'threshold',
+            'level',
+        ]
 
 class ObjectivePairSerializer(HyperlinkedIdModelSerializer):
     class Meta:
         model = ObjectivePair
         fields = '__all__'
 
-
-class ObjectiveWeightSerializer(HyperlinkedIdModelSerializer):
-    class Meta:
-        model = ObjectiveWeight
-        fields = '__all__'
-
 class LevelResultSerializer(HyperlinkedIdModelSerializer):
     class Meta:
         model = LevelResult
         fields = '__all__'
-BadgeResult
+    def create(self, validated_data):
+        level_result : LevelResult = LevelResult.objects.create(**validated_data)
+        objective_responses = ObjectiveResponse.objects.filter(user=level_result.user, requirements__level=level_result.level)
+        for objective_response in objective_responses:
+            PredictGameObjectiveNetwork(objective_response)
+        PredictMainNetwork(level_result)
+        UpdateLevelRecommendations(level_result)
+        return level_result
 
 class BadgeResultSerializer(HyperlinkedIdModelSerializer):
     class Meta:
         model = BadgeResult
-        fields = '__all__'
+        depth = 2
+        fields = [
+            'badge_requirement',
+            'awarded',
+        ]
+    
+class ObjectiveRequirementsSerializer(HyperlinkedIdModelSerializer):
+    class Meta:
+        model = ObjectiveRequirements
+        depth = 3
+        fields = [
+            'id',
+            'url',
+            'pair',
+            'weight',
+            'description',
+            'target',
+            'tolerance',
+            'json',
+            'result_low_cutoff',
+            'result_high_cutoff',
+            'time_low_cutoff',
+            'time_high_cutoff',
+        ]
 
 class ObjectiveResponseSerializer(HyperlinkedIdModelSerializer):
     class Meta:
         model = ObjectiveResponse
         fields = '__all__'
 
-ObjectiveResponse
 
 class LevelSerializer(HyperlinkedIdModelSerializer):
+    objective_requirements = ObjectiveRequirementsSerializer(many=True, read_only=True)
+    badge_requirements = BadgeRequirementSerializer(many=True, read_only=True)
     class Meta:
         model = Level
-        depth = 5
-        fields = '__all__'
+        depth = 6
+        fields = [
+            'id',
+            'url',
+            'name',
+            'description',
+            'starting_credits',
+            'difficulty_math',
+            'difficulty_hci' ,
+            'tools',
+            'area',
+            'creator',
+            'shop_items',
+            'starting_items',
+            'objective_requirements',
+            'badge_requirements',
+            'training',
+            'prerequesite_levels'
+        ]
 
 class UnitSerializer(HyperlinkedIdModelSerializer):
     class Meta:
@@ -180,7 +228,20 @@ class PlacingPlannerSerializer(HyperlinkedIdModelSerializer):
         model = PlacingPlanner
         fields = '__all__'
 
-class ObjectiveRequirementsSerializer(HyperlinkedIdModelSerializer):
+
+class UserGameDataSerializer(HyperlinkedIdModelSerializer):
+    awarded_badges = BadgeResultSerializer(many=True, read_only=True)
     class Meta:
-        model = ObjectiveRequirements
-        fields = '__all__'
+        model = UserGameData
+        depth = 3
+        fields = [
+            'user',
+            'user_id',
+            'unlocked_learning_objectives',
+            'closed_learning_objectives',
+            'recommended_levels',
+            'completed_levels',
+            'unlocked_levels',
+            'unlocked_linear_levels',
+            'awarded_badges',
+        ]

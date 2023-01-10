@@ -1,12 +1,12 @@
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User, Group
+from django.http import request
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.views import APIView
-
+from django.db.models import Prefetch
 from bayesianNetwork.level_recommender import RecommendLevels, UpdateLevelRecommendations
-from bayesianNetwork.models import UserGameData
 from bayesianNetwork.stealth_assessment import PredictGameObjectiveNetwork, PredictMainNetwork
 from .serializers import *
 from django.shortcuts import render, redirect
@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
 
 def register(request):
     if request.method == 'POST':
@@ -117,17 +118,12 @@ class BadgeRequirementViewSet(viewsets.ModelViewSet):
     queryset = BadgeRequirement.objects.all()
     serializer_class = BadgeRequirementSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['level']
 
 class ObjectivePairViewSet(viewsets.ModelViewSet):
     queryset = ObjectivePair.objects.all()
     serializer_class = ObjectivePairSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-
-class ObjectiveWeightViewSet(viewsets.ModelViewSet):
-    queryset = ObjectiveWeight.objects.all()
-    serializer_class = ObjectiveWeightSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
@@ -139,13 +135,21 @@ class LargeResultsSetPagination(PageNumberPagination):
 class LevelViewSet(viewsets.ModelViewSet):
     queryset = Level.objects.all()
     serializer_class = LevelSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
     pagination_class = LargeResultsSetPagination
 
 class BadgeResultViewSet(viewsets.ModelViewSet):
     queryset = BadgeResult.objects.all()
     serializer_class = BadgeResultSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    def get_queryset(self):
+        """
+        This view should return a list of all the purchases
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        print(user) 
+        return BadgeResult.objects.filter(user__user=user)
 
 class ObjectiveResponseViewSet(viewsets.ModelViewSet):
     queryset = ObjectiveResponse.objects.all()
@@ -157,15 +161,6 @@ class LevelResultViewSet(viewsets.ModelViewSet):
     queryset = LevelResult.objects.all()
     serializer_class = LevelResultSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    def post(self, request, *args, **kwargs):
-        level_result: LevelResult = self.create(request, *args, **kwargs)
-        print("DASDA")
-        objective_responses = level_result.objective_responses.all()
-        for objective_response in objective_responses:
-            PredictGameObjectiveNetwork(objective_response)
-        PredictMainNetwork(level_result)
-        UpdateLevelRecommendations(level_result)
-        return Response(data=UserGameData.objects.get(User=level_result.user))
 
 
 class UnitViewSet(viewsets.ModelViewSet):
@@ -219,3 +214,39 @@ class ObjectiveRequirementsViewSet(viewsets.ModelViewSet):
     queryset = ObjectiveRequirements.objects.all()
     serializer_class = ObjectiveRequirementsSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['level']
+
+class UserGameDataViewSet(viewsets.ModelViewSet):
+    queryset = UserGameData.objects.all()
+    serializer_class = UserGameDataSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    def get_object(self):
+        user = self.request.user
+        try:
+            user_game_data: UserGameData = UserGameData.objects.get(user=user)
+        except:
+            default_user: User =  User.objects.get(username="default")
+            default_game_data: UserGameData = UserGameData.objects.get(user=default_user)
+            user_game_data: UserGameData = UserGameData.objects.create(
+                user=user,
+            )
+            user_game_data.closed_learning_objectives.set(default_game_data.closed_learning_objectives.all())
+            user_game_data.unlocked_learning_objectives.set(default_game_data.unlocked_learning_objectives.all())
+            user_game_data.unlocked_linear_levels.set(default_game_data.unlocked_linear_levels.all())
+        return user_game_data
+    def get_queryset(self):
+        user = self.request.user
+        try:
+            user_game_data: UserGameData = UserGameData.objects.get(user=user)
+        except:
+            default_user: User =  User.objects.get(username="default")
+            default_game_data: UserGameData = UserGameData.objects.get(user=default_user)
+            user_game_data: UserGameData = UserGameData.objects.create(
+                user=user,
+            )
+            user_game_data.closed_learning_objectives.set(default_game_data.closed_learning_objectives.all())
+            user_game_data.unlocked_learning_objectives.set(default_game_data.unlocked_learning_objectives.all())
+            user_game_data.unlocked_linear_levels.set(default_game_data.unlocked_linear_levels.all())
+        queryset = UserGameData.objects.prefetch_related(Prefetch('badges', queryset=BadgeResult.objects.filter(awarded=True), to_attr='awarded_badges'))
+        return queryset.filter(user=user)

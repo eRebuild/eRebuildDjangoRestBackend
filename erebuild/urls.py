@@ -24,7 +24,6 @@ router.register(r'ItemQuantity', views.ItemQuantityViewSet)
 router.register(r'LearningObjective', views.LearningObjectiveViewSet)
 router.register(r'BadgeRequirement', views.BadgeRequirementViewSet)
 router.register(r'ObjectivePair', views.ObjectivePairViewSet)
-router.register(r'ObjectiveWeight', views.ObjectiveWeightViewSet)
 router.register(r'Level', views.LevelViewSet)
 router.register(r'LevelResult', views.LevelResultViewSet)
 router.register(r'BadgeResult', views.BadgeResultViewSet)
@@ -38,6 +37,7 @@ router.register(r'ItemsPlanner', views.ItemsPlannerViewSet)
 router.register(r'FoldPlanner', views.FoldPlannerViewSet)
 router.register(r'PlacingPlanner', views.PlacingPlannerViewSet)
 router.register(r'ObjectiveRequirements', views.ObjectiveRequirementsViewSet)
+router.register(r'UserGameData', views.UserGameDataViewSet)
 
 
 # Wire up our API using automatic URL routing.

@@ -1,6 +1,6 @@
 import imp
-from .models import InitialGameObjectiveBayesianNetwork, InitialMainBayesianNetwork, LearningObjectiveTrajectory, UserGameData, UserGameObjectiveBayesianNetwork, UserMainBayesianNetwork
-from .resources import InitialGameObjectiveBayesianNetworkResource, InitialMainBayesianNetworkResource, LearningObjectiveTrajectoryResource, UserGameDataResource, UserGameObjectiveBayesianNetworkResource, UserMainBayesianNetworkResource
+from .models import InitialGameObjectiveBayesianNetwork, InitialMainBayesianNetwork, LearningObjectiveTrajectory, UserGameObjectiveBayesianNetwork, UserMainBayesianNetwork
+from .resources import InitialGameObjectiveBayesianNetworkResource, InitialMainBayesianNetworkResource, LearningObjectiveTrajectoryResource, UserGameObjectiveBayesianNetworkResource, UserMainBayesianNetworkResource
 from django.contrib import admin
 
 from import_export.admin import ImportExportModelAdmin
@@ -12,10 +12,6 @@ admin.site.register(UserGameObjectiveBayesianNetwork, UserGameObjectiveBayesianN
 class UserMainBayesianNetworkAdmin(ImportExportModelAdmin):
     resource_class = UserMainBayesianNetworkResource
 admin.site.register(UserMainBayesianNetwork, UserMainBayesianNetworkAdmin)
-
-class UserGameDataAdmin(ImportExportModelAdmin):
-    resource_class = UserGameDataResource
-admin.site.register(UserGameData, UserGameDataAdmin)
 
 class LearningObjectiveTrajectoryAdmin(ImportExportModelAdmin):
     resource_class = LearningObjectiveTrajectoryResource

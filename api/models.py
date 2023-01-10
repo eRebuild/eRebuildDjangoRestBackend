@@ -1,4 +1,3 @@
-from pickle import TRUE
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -38,20 +37,25 @@ class GameObjective(models.Model):
     def __str__(self):
         return self.name
 
-class Dimension(models.Model):
-    name = models.CharField(max_length=30)
-    value = models.FloatField(default=1)
-    unit = models.CharField(max_length=30)
-    def __str__(self):
-        return str(self.name) + ': ' + str(self.value) + str(self.unit)
-
 class Item(models.Model):
     name = models.CharField(max_length=30)
     description = models.CharField(max_length=240)
     cost = models.IntegerField(default=100)
-    dimensions = models.ManyToManyField(Dimension, blank=True)
     def __str__(self):
         return self.name
+
+class Dimension(models.Model):
+    name = models.CharField(max_length=30)
+    value = models.FloatField(default=1)
+    measurement_unit = models.CharField(max_length=30)
+    def __str__(self):
+        return str(self.name) + ': ' + str(self.value) + str(self.unit)
+
+class ItemDimension(Dimension):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    def __str__(self):
+        return str(self.name) + ': ' + str(self.value) + str(self.unit)
+
 
 class ItemQuantity(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
@@ -67,42 +71,23 @@ class LearningObjective(models.Model):
     def __str__(self):
         return self.name
     
-class BadgeRequirement(models.Model):
-    badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
-    threshold = models.FloatField(default=0)
-    def __str__(self):
-        return str(self.badge) + ' ' + str(self.threshold)
-
-class BadgeResult(models.Model):
-    badge_requirement = models.ForeignKey(BadgeRequirement, on_delete=models.CASCADE)
-    awarded = models.BooleanField()
-
 class ObjectivePair(models.Model):
     game_objective = models.ForeignKey(GameObjective, on_delete=models.CASCADE)
     learning_objective = models.ForeignKey(LearningObjective, on_delete=models.CASCADE)
     def __str__(self):
         return str(self.learning_objective) +' ' + str(self.game_objective)
 
-class ObjectiveWeight(models.Model):
-    objective_pair = models.ForeignKey(ObjectivePair, on_delete=models.CASCADE)
-    weight = models.FloatField(default=1)
-    def __str__(self):
-        return str(self.objective_pair) + ' ' + str(self.weight)
-
 class Unit(models.Model):
     name = models.CharField(max_length=30)
-    dimensions = models.ManyToManyField(Dimension, blank=False, related_name="unit_dimensions")
     quantity = models.IntegerField(default=0)
     units = models.ManyToManyField('self', blank=True)
     def __str__(self):
         return str(self.quantity) + 'x' + str(self.name)
 
-class Group(models.Model):
-    name = models.CharField(max_length=30, blank=True)
-    units = models.ManyToManyField(Unit)
-    dimensions = models.ManyToManyField(Dimension, blank=False, related_name="group_dimensions")
+class UnitDimension(Dimension):
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
     def __str__(self):
-        return str(self.name)
+        return str(self.name) + ': ' + str(self.value) + str(self.unit)
 
 class Shape(models.Model):
     name = models.CharField(max_length=30, blank=True)
@@ -114,39 +99,19 @@ class Shape(models.Model):
 class Target(models.Model):
     name = models.CharField(max_length=30, blank=True)
     shape = models.ForeignKey(Shape, on_delete=models.CASCADE)
-    dimensions = models.ManyToManyField(Dimension, blank=False)
     def __str__(self):
         return str(self.name)
+
+
+class TargetDimension(Dimension):
+    unit = models.ForeignKey(Target, on_delete=models.CASCADE)
+    def __str__(self):
+        return str(self.name) + ': ' + str(self.value) + str(self.unit)
 
 class Module(models.Model):
     name = models.CharField(max_length=30, blank=True)
     def __str__(self):
         return str(self.name)
-
-class ObjectiveRequirements(models.Model):
-    type = models.ForeignKey(GameObjective, on_delete=models.CASCADE)
-    description = models.CharField(blank=True, max_length=240)
-    target = models.FloatField(null=True, blank=True)
-    tolerance = models.FloatField(null=True, blank=True)
-    json = models.JSONField(null=True, blank=True, default=dict)
-    result_low_cutoff = models.FloatField(null=True, blank=True)
-    result_high_cutoff = models.FloatField(null=True, blank=True)
-    time_low_cutoff = models.FloatField(null=True, blank=True)
-    time_high_cutoff = models.FloatField(null=True, blank=True)
-    def __str__(self):
-        return str(self.type)
-
-class ObjectiveResponse(models.Model):
-    requirements = models.ForeignKey(ObjectiveRequirements, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    created = models.DateTimeField(auto_now_add=True)
-    time = models.FloatField()
-    complete = models.BooleanField()
-    actual = models.FloatField(null=True, blank=True)
-    json = models.JSONField(null=True, blank=True, default=dict);
-    def __str__(self):
-        return str(self.requirements)
-
 
 class Vector2():
     def __init__(self, x,y):
@@ -195,25 +160,56 @@ class Level(models.Model):
     starting_credits = models.IntegerField(default=1000)
     difficulty_math = models.IntegerField(default=0)
     difficulty_hci = models.IntegerField(default=0)
-    tools = models.ManyToManyField(Tool, blank=TRUE)
+    tools = models.ManyToManyField(Tool, blank=True)
     area = models.ForeignKey(Area, on_delete=models.CASCADE)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
-    badges = models.ManyToManyField(BadgeRequirement)
-    objective_weights = models.ManyToManyField(ObjectiveWeight)
-    objective_requirements = models.ManyToManyField(ObjectiveRequirements, blank=True)
     shop_items = models.ManyToManyField(ItemQuantity, blank=True, related_name="shop_items")
     starting_items = models.ManyToManyField(ItemQuantity, blank=True, related_name="starting_items")
+    prerequesite_levels = models.ManyToManyField('self', blank=True)
+    training = models.BooleanField(default=False)
     def __str__(self):
         return self.name
 
-        
+class BadgeRequirement(models.Model):
+    level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name="badge_requirements")
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
+    threshold = models.FloatField(default=0)
+    def __str__(self):
+        return str(self.badge) + ' ' + str(self.threshold)
+
+class ObjectiveRequirements(models.Model):
+    level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name="objective_requirements")
+    pair = models.ForeignKey(ObjectivePair, on_delete=models.CASCADE)
+    weight = models.FloatField(default=1)
+    description = models.CharField(blank=True, max_length=240)
+    target = models.FloatField(null=True, blank=True)
+    tolerance = models.FloatField(null=True, blank=True)
+    json = models.JSONField(null=True, blank=True, default=dict)
+    result_low_cutoff = models.FloatField(null=True, blank=True)
+    result_high_cutoff = models.FloatField(null=True, blank=True)
+    time_low_cutoff = models.FloatField(null=True, blank=True)
+    time_high_cutoff = models.FloatField(null=True, blank=True)
+    def __str__(self):
+        return str(self.pair)
+
+class ObjectiveResponse(models.Model):
+    requirements = models.ForeignKey(ObjectiveRequirements, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    time = models.FloatField()
+    complete = models.BooleanField()
+    actual = models.FloatField(null=True, blank=True)
+    json = models.JSONField(null=True, blank=True, default=dict);
+    date_complete = models.DateTimeField(auto_now_add=True)
+    error_message = models.CharField(max_length=300, blank=True)
+    def __str__(self):
+        return str(self.requirements)
+
 class LevelResult(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     level = models.ForeignKey(Level, on_delete=models.CASCADE)
     completed = models.BooleanField()
-    badge_results = models.ManyToManyField(BadgeResult)
-    objective_responses = models.ManyToManyField(ObjectiveResponse)
-
+    date_complete = models.DateTimeField(auto_now_add=True)
 
 class UnitsPlanner(models.Model):
     level = models.ForeignKey(Level, on_delete=models.CASCADE)
@@ -245,3 +241,19 @@ class PlacingPlanner(models.Model):
     expected_input = models.JSONField()
     def __str__(self):
         return str(self.level.name) + ' ' + str(self.module.name)
+
+
+class UserGameData(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, default=None,related_name="user_temp")
+    unlocked_learning_objectives = models.ManyToManyField(LearningObjective, related_name="unlocked_learning_objectives_temp")
+    closed_learning_objectives = models.ManyToManyField(LearningObjective, related_name="closed_learning_objectives_temp")
+    recommended_levels = models.ManyToManyField(Level, related_name="recommended_levels_temp", blank=True)
+    completed_levels = models.ManyToManyField(Level, related_name="completed_levels_temp", blank=True)
+    unlocked_levels = models.ManyToManyField(Level, related_name="unlocked_levels_temp", blank=True)
+    unlocked_linear_levels = models.ManyToManyField(Level, related_name="unlocked_linear_levels_temp", blank=True)
+
+class BadgeResult(models.Model):
+    badge_requirement = models.ForeignKey(BadgeRequirement, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserGameData, on_delete=models.CASCADE, related_name='badges')
+    awarded = models.BooleanField()
+    actual = models.FloatField(null=True, blank=True)

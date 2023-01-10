@@ -50,10 +50,6 @@ class ObjectivePairAdmin(ImportExportModelAdmin):
     resource_class = ObjectivePairResource
 admin.site.register(ObjectivePair, ObjectivePairAdmin)
 
-class ObjectiveWeightAdmin(ImportExportModelAdmin):
-    resource_class = ObjectiveWeightResource
-admin.site.register(ObjectiveWeight, ObjectiveWeightAdmin)
-
 class DimensionAdmin(ImportExportModelAdmin):
     resource_class = DimensionResource
 admin.site.register(Dimension, DimensionAdmin)
@@ -106,6 +102,9 @@ class BadgeResultAdmin(ImportExportModelAdmin):
     resource_class = BadgeResultResource
 admin.site.register(BadgeResult, BadgeResultAdmin)
 
+class UserGameDataAdmin(ImportExportModelAdmin):
+    resource_class = UserGameDataResource
+admin.site.register(UserGameData, UserGameDataAdmin)
 
 # Register your models here.
 # admin.site.register(Badge)

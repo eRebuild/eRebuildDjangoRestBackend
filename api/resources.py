@@ -61,11 +61,6 @@ class ObjectivePairResource(ModelResource):
 
 
 
-class ObjectiveWeightResource(ModelResource):
-    class Meta:
-        model = ObjectiveWeight
-
-
 
 class LevelResource(ModelResource):
     class Meta:
@@ -138,3 +133,9 @@ class LevelResultResource(ModelResource):
 class BadgeResultResource(ModelResource):
     class Meta:
         model = BadgeResult
+
+
+
+class UserGameDataResource(ModelResource):
+    class Meta:
+        model = UserGameData
