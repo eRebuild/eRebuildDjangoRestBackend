@@ -5,6 +5,28 @@ from rest_framework.authtoken.admin import TokenAdmin
 from import_export.admin import ImportExportModelAdmin
 from .resources import * 
 
+class ItemQuantityInline(admin.TabularInline):
+    model = ItemQuantity
+
+class InWorldItemInline(admin.TabularInline):
+    model = InWorldItem
+
+class BadgeRequirementInline(admin.TabularInline):
+    model = BadgeRequirement
+
+class ObjectiveRequirementsInline(admin.TabularInline):
+    model = ObjectiveRequirements
+
+class LevelAdmin(ImportExportModelAdmin):
+    inlines = [
+        ItemQuantityInline,
+        ObjectiveRequirementsInline,
+        BadgeRequirementInline,
+        InWorldItemInline,
+    ]
+    resource_class = LevelResource
+admin.site.register(Level, LevelAdmin)
+
 class ToolAdmin(ImportExportModelAdmin):
     resource_class = ToolResource
 admin.site.register(Tool, ToolAdmin)
@@ -38,9 +60,7 @@ class LearningObjectiveAdmin(ImportExportModelAdmin):
 admin.site.register(LearningObjective, LearningObjectiveAdmin)
 
 
-class LevelAdmin(ImportExportModelAdmin):
-    resource_class = LevelResource
-admin.site.register(Level, LevelAdmin)
+
 
 class BadgeRequirementAdmin(ImportExportModelAdmin):
     resource_class = BadgeRequirementResource

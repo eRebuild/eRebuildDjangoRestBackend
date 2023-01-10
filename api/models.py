@@ -153,6 +153,8 @@ class InWorldItem(models.Model):
     keep_apart_group = models.IntegerField(blank=True)
     keep_close_group = models.IntegerField(blank=True)
     paint_needed = models.IntegerField(blank=True)
+    def __str__(self):
+        return f'{self.item} {self.transform}'
 
 class Level(models.Model):
     name = models.CharField(max_length=30)
@@ -175,7 +177,7 @@ class BadgeRequirement(models.Model):
     badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
     threshold = models.FloatField(default=0)
     def __str__(self):
-        return str(self.badge) + ' ' + str(self.threshold)
+        return f'{self.badge} {self.threshold}'
 
 class ObjectiveRequirements(models.Model):
     level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name="objective_requirements")
@@ -190,7 +192,7 @@ class ObjectiveRequirements(models.Model):
     time_low_cutoff = models.FloatField(null=True, blank=True)
     time_high_cutoff = models.FloatField(null=True, blank=True)
     def __str__(self):
-        return str(self.pair)
+        return f'{self.pair} {self.level}'
 
 class ObjectiveResponse(models.Model):
     requirements = models.ForeignKey(ObjectiveRequirements, on_delete=models.CASCADE)
@@ -203,19 +205,21 @@ class ObjectiveResponse(models.Model):
     date_complete = models.DateTimeField(auto_now_add=True)
     error_message = models.CharField(max_length=300, blank=True)
     def __str__(self):
-        return str(self.requirements)
+        return f'{self.requirements} {self.user}'
 
 class LevelResult(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     level = models.ForeignKey(Level, on_delete=models.CASCADE)
     completed = models.BooleanField()
     date_complete = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f'{self.level} {self.user} {self.date_complete}'
 
 class UnitsPlanner(models.Model):
     level = models.ForeignKey(Level, on_delete=models.CASCADE)
     units = models.ManyToManyField(Unit)
     def __str__(self):
-        return str(self.level.name)
+        return str(self.level)
 
 class ItemsPlanner(models.Model):
     level = models.ForeignKey(Level, on_delete=models.CASCADE)
@@ -225,14 +229,14 @@ class ItemsPlanner(models.Model):
     targets = models.ManyToManyField(Target, blank=True)
     expected_quantity = models.JSONField()
     def __str__(self):
-        return str(self.level.name) + ' ' + str(self.module.name)
+        return f'{self.level} {self.module}'
 
 class FoldPlanner(models.Model):
     level = models.ForeignKey(Level, on_delete=models.CASCADE)
     image = models.CharField(max_length=300, blank=True)
     expected_input = models.JSONField()
     def __str__(self):
-        return str(self.level.name)
+        return str(self.level)
 
 class PlacingPlanner(models.Model):
     level = models.ForeignKey(Level, on_delete=models.CASCADE)
@@ -240,8 +244,7 @@ class PlacingPlanner(models.Model):
     selection_options = models.JSONField()
     expected_input = models.JSONField()
     def __str__(self):
-        return str(self.level.name) + ' ' + str(self.module.name)
-
+        return f'{self.level} {self.module}'
 
 class UserGameData(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=None,related_name="user_temp")
@@ -251,9 +254,13 @@ class UserGameData(models.Model):
     completed_levels = models.ManyToManyField(Level, related_name="completed_levels_temp", blank=True)
     unlocked_levels = models.ManyToManyField(Level, related_name="unlocked_levels_temp", blank=True)
     unlocked_linear_levels = models.ManyToManyField(Level, related_name="unlocked_linear_levels_temp", blank=True)
+    def __str__(self):
+        return f'{self.user}'
 
 class BadgeResult(models.Model):
     badge_requirement = models.ForeignKey(BadgeRequirement, on_delete=models.CASCADE)
     user = models.ForeignKey(UserGameData, on_delete=models.CASCADE, related_name='badges')
     awarded = models.BooleanField()
     actual = models.FloatField(null=True, blank=True)
+    def __str__(self):
+        return f'{self.badge_requirement} {self.user}'
