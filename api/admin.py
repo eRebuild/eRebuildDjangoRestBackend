@@ -5,8 +5,11 @@ from rest_framework.authtoken.admin import TokenAdmin
 from import_export.admin import ImportExportModelAdmin
 from .resources import * 
 
-class ItemQuantityInline(admin.TabularInline):
-    model = ItemQuantity
+class ShopItemInline(admin.TabularInline):
+    model = Level.shop_items.through
+
+class StartingItemInline(admin.TabularInline):
+    model = Level.starting_items.through
 
 class InWorldItemInline(admin.TabularInline):
     model = InWorldItem
@@ -19,7 +22,8 @@ class ObjectiveRequirementsInline(admin.TabularInline):
 
 class LevelAdmin(ImportExportModelAdmin):
     inlines = [
-        ItemQuantityInline,
+        ShopItemInline,
+        StartingItemInline,
         ObjectiveRequirementsInline,
         BadgeRequirementInline,
         InWorldItemInline,

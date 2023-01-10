@@ -57,12 +57,6 @@ class ItemDimension(Dimension):
         return str(self.name) + ': ' + str(self.value) + str(self.unit)
 
 
-class ItemQuantity(models.Model):
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1)
-    def __str__(self):
-        return str(self.item) + ' ' + str(self.quantity) 
-
 class LearningObjective(models.Model):
     name = models.CharField(max_length=30)
     node_name = models.CharField(max_length=30, default="lo_"+str(name))
@@ -142,19 +136,13 @@ class Transform():
     def __str__(self):
         return f'{self.position}\n{self.rotation}\n{self.scale}'
 
-class InWorldItem(models.Model):
+
+class ItemQuantity(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    transform = models.JSONField()
-    needs_collection = models.BooleanField()
-    is_interactable = models.BooleanField()
-    is_ghost = models.BooleanField()
-    is_visible = models.BooleanField()
-    is_trigger = models.BooleanField()
-    keep_apart_group = models.IntegerField(blank=True)
-    keep_close_group = models.IntegerField(blank=True)
-    paint_needed = models.IntegerField(blank=True)
+    quantity = models.IntegerField(default=1)
     def __str__(self):
-        return f'{self.item} {self.transform}'
+        return str(self.item) + ' ' + str(self.quantity)
+
 
 class Level(models.Model):
     name = models.CharField(max_length=30)
@@ -171,6 +159,23 @@ class Level(models.Model):
     training = models.BooleanField(default=False)
     def __str__(self):
         return self.name
+ 
+
+class InWorldItem(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    level = models.ForeignKey(Level, on_delete=models.CASCADE)
+    transform = models.JSONField()
+    needs_collection = models.BooleanField()
+    is_interactable = models.BooleanField()
+    is_ghost = models.BooleanField()
+    is_visible = models.BooleanField()
+    is_trigger = models.BooleanField()
+    keep_apart_group = models.IntegerField(blank=True)
+    keep_close_group = models.IntegerField(blank=True)
+    paint_needed = models.IntegerField(blank=True)
+    def __str__(self):
+        return f'{self.item} {self.transform}'
+
 
 class BadgeRequirement(models.Model):
     level = models.ForeignKey(Level, on_delete=models.CASCADE, related_name="badge_requirements")
