@@ -13,7 +13,11 @@ class StartingItemInline(admin.TabularInline):
 
 class InWorldItemInline(admin.TabularInline):
     model = InWorldItem
-
+    fields = [
+        'item',
+        'quantity'
+    ]
+    
 class BadgeRequirementInline(admin.TabularInline):
     model = BadgeRequirement
 
@@ -56,7 +60,7 @@ admin.site.register(Item, ItemAdmin)
 
 class ItemQuantityAdmin(ImportExportModelAdmin):
     resource_class = ItemQuantityResource
-    list_display = ('item', 'quantity')
+    
 admin.site.register(ItemQuantity, ItemQuantityAdmin)
 
 
