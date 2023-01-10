@@ -56,6 +56,7 @@ admin.site.register(Item, ItemAdmin)
 
 class ItemQuantityAdmin(ImportExportModelAdmin):
     resource_class = ItemQuantityResource
+    list_display = ('item', 'quantity')
 admin.site.register(ItemQuantity, ItemQuantityAdmin)
 
 
