@@ -32,8 +32,8 @@ class Area(models.Model):
 class GameObjective(models.Model):
     name = models.CharField(max_length=30)
     description = models.CharField(max_length=240)
-    node_name = models.CharField(blank=True, max_length=64)
-    negative_correlation = models.BooleanField()
+    node_name = models.CharField(blank=True, max_length=64, default="lo_"+name)
+    negative_correlation = models.BooleanField(default=False)
     def __str__(self):
         return self.name
 
@@ -65,7 +65,7 @@ class ItemQuantity(models.Model):
 
 class LearningObjective(models.Model):
     name = models.CharField(max_length=30)
-    node_name = models.CharField(max_length=30)
+    node_name = models.CharField(max_length=30, default="lo_"+name)
     description = models.CharField(max_length=360)
     example = models.CharField(max_length=360, null=True)
     def __str__(self):
