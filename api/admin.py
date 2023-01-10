@@ -5,13 +5,12 @@ from rest_framework.authtoken.admin import TokenAdmin
 from import_export.admin import ImportExportModelAdmin
 from .resources import * 
 
-class ShopItemInline(admin.TabularInline):
-    model = Level.shop_items.through
 
+class ShopItemInline(admin.TabularInline):
+    model = ShopItemQuantity
 
 class StartingItemInline(admin.TabularInline):
-    model = Level.starting_items
-
+    model = StartingItemQuantity
 
 class InWorldItemInline(admin.TabularInline):
     model = InWorldItem

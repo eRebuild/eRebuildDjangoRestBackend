@@ -160,6 +160,13 @@ class Level(models.Model):
     def __str__(self):
         return self.name
  
+class ShopItemQuantity(ItemQuantity):
+    level = models.ForeignKey(Level, on_delete=models.CASCADE)
+
+class StartingItemQuantity(ItemQuantity):
+    level = models.ForeignKey(Level, on_delete=models.CASCADE)
+
+
 
 class InWorldItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
