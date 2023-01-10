@@ -7,18 +7,12 @@ from .resources import *
 
 class ShopItemInline(admin.TabularInline):
     model = Level.shop_items.through
-    fields = [
-        'item',
-        'quantity'
-    ]
+
 
 class StartingItemInline(admin.TabularInline):
     model = Level.starting_items.through
-    fields = [
-        'item',
-        'quantity'
-    ]
-    
+
+
 class InWorldItemInline(admin.TabularInline):
     model = InWorldItem
 
