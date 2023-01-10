@@ -10,7 +10,7 @@ class ShopItemInline(admin.TabularInline):
 
 
 class StartingItemInline(admin.TabularInline):
-    model = Level.starting_items.through
+    model = Level.starting_items
 
 
 class InWorldItemInline(admin.TabularInline):
